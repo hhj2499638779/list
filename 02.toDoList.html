@@ -1,0 +1,288 @@
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title></title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="./css/index.css">
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+
+        .list-item {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .list-enter-active,
+        .list-leave-active {
+            transition: all 1s;
+        }
+
+        .list-enter,
+        .list-leave-to
+        /* .list-leave-active for below version 2.1.8 */
+
+            {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+    </style>
+
+</head>
+
+<body>
+    <section class="todoapp">
+        <header class="header">
+            <h1>任务清单</h1>
+            <input autofocus="autofocus" autocomplete="off" placeholder="想干啥?" class="new-todo" v-model="inputvalue" @keyup.enter="onEnter">
+        </header>
+        <section class="main">
+            <input v-model="checkAll" @change='checkalltodo' type="checkbox" class="toggle-all">
+
+            <transition-group name="list" class="todo-list" v-cloak tag="ul">
+
+                <li :class="['todo',{completed:item.complete,editing:item.isEdit} ]" :key="item.name" v-for="(item, index) in visiableList">
+                    <div class="view">
+                        <input @change='checkistocheck' type="checkbox" v-model="item.complete" class="toggle">
+                        <label @dblclick="editTodo(index)">{{item.name}}</label>
+                        <button v-on:click="remove(index)" class="destroy"></button>
+                    </div>
+                    <input v-focus v-if="item.isEdit" type="text" v-model="cacheEdit" class="edit" @keyup.enter="saveEdit(index)" @keyup.esc="cancelEdit(index)"
+                        @blur="cancelEdit(index)">
+                </li>
+            </transition-group>
+            <!-- <li class="todo completed">
+                    <div class="view">
+                        <input type="checkbox" class="toggle">
+                        <label>21</label>
+                        <button class="destroy"></button>
+                    </div>
+                    <input type="text" class="edit">
+                </li>
+                <li class="todo editing">
+                    <div class="view">
+                        <input type="checkbox" class="toggle">
+                        <label>21</label>
+                        <button class="destroy"></button>
+                    </div>
+                    <input type="text" class="edit">
+                </li> -->
+
+        </section>
+        <footer class="footer">
+            <span class="todo-count">
+                <strong>{{Nodone}}</strong> 项 剩余
+            </span>
+            <ul class="filters">
+                <li>
+                    <a href="#/all" :class="{selected:visibility=='全部'}" v-on:click="changeVisiable('全部')">全部</a>
+                </li>
+                <li>
+                    <a href="#/active" :class="{selected:visibility=='未完成'}" v-on:click="changeVisiable('未完成')">未完成</a>
+                </li>
+                <li>
+                    <a href="#/completed" :class="{selected:visibility=='完成'}" v-on:click="changeVisiable('完成')">完成</a>
+                </li>
+            </ul>
+            <button v-on:click="clear" class="clear-completed">
+                清空列表
+            </button>
+        </footer>
+    </section>
+    <footer class="info">
+        <p>双击进入编辑状态</p>
+        <p>鸣谢:
+            <a href="http://evanyou.me">Evan You</a>
+        </p>
+        <p>参考于
+            <a href="http://todomvc.com">TodoMVC</a>
+        </p>
+    </footer>
+
+    <!-- <script>
+        // tell the embed parent frame the height of the content
+        if (window.parent && window.parent.parent) {
+            window.parent.parent.postMessage(["resultsFrame", {
+                height: document.body.getBoundingClientRect().height,
+                slug: "4dr2fLb7"
+            }], "*")
+        }
+    </script> -->
+
+
+</body>
+
+</html>
+<script type="text/javascript" src="./lib/vue.js"></script>
+<script>
+    let list = JSON.parse(window.localStorage.getItem('SZHM19list'));
+    if (list) {
+        // 有值
+        console.log('y');
+    } else {
+        // 没值
+        console.log('n');
+        list = [{
+                name: '吃饭',
+                complete: true,
+                isEdit: false
+            },
+            {
+                name: '睡觉',
+                complete: false,
+                isEdit: false
+            },
+            {
+                name: '打豆豆',
+                complete: true,
+                isEdit: false
+            },
+
+        ]
+    }
+    Vue.directive('focus', {
+        // 当被绑定的元素插入到 DOM 中时……
+        inserted: function (el) {
+            // 聚焦元素
+            el.focus()
+        }
+    })
+    //数据的常驻
+    //尝试获取数据
+
+    var app = new Vue({
+        el: '.todoapp',
+        data: {
+            inputvalue: '',
+            cacheEdit: '',
+            visibility: '全部',
+            //是否是全选
+            checkAll: false,
+            list
+            // list: [{
+            //         name: '洗碗',
+            //         complete: true,
+            //         isEdit: false
+            //     },
+            //     {
+            //         name: '遛狗',
+            //         complete: false,
+            //         isEdit: false
+            //     }, {
+            //         name: '睡觉',
+            //         complete: false,
+            //         isEdit: false
+            //     }
+            // ]
+        },
+        methods: {
+            onEnter() {
+                this.inputvalue = this.inputvalue.trim();
+                if (this.inputvalue != '') {
+                    this.list.push({
+                        name: this.inputvalue,
+                        complete: false,
+                        isEdit: false
+                    })
+                    this.inputvalue = ''
+                }
+            },
+            remove(index) {
+                this.list.splice(index, 1);
+            },
+            editTodo(index) {
+                for (let i = 0; i < this.list.length; i++) {
+                    this.list[i].isEdit = false;
+                }
+                this.list[index].isEdit = !this.list[index].isEdit;
+                this.cacheEdit = this.list[index].name;
+
+            },
+            saveEdit(index) {
+                this.list[index].name = this.cacheEdit;
+                this.list[index].isEdit = false;
+            },
+            cancelEdit(index) {
+                this.list[index].isEdit = false;
+            },
+            clear() {
+                this.list = [];
+            },
+            changeVisiable(data) {
+                this.visibility = data;
+            },
+            checkalltodo() {
+                for (let i = 0; i < this.list.length; i++) {
+                    this.list[i].complete = this.checkAll;
+                }
+            },
+            checkistocheck() {
+                let totalcount = this.list.length;
+                //选中的个数
+                let checkedcount = this.list.filter((v, i) => {
+                    if (v.complete == true) return v;
+                }).length;
+                this.checkAll = totalcount == checkedcount;
+
+            }
+
+        },
+        computed: {
+            // 仅读取
+            Nodone: function () {
+                // let num = 0;
+                // for (let i = 0; i < this.list.length; i++) {
+                //     if (this.list[i].complete == false) {
+                //         num++;
+                //     }
+                // }
+                // return num;
+                //es5筛选数组方法
+                return this.list.filter((v, i) => {
+                    if (v.complete == false) {
+                        return v;
+                    }
+                }).length;
+            },
+            visiableList() {
+                let backarr = [];
+                for (let i = 0; i < this.list.length; i++) {
+                    switch (this.visibility) {
+                        case '全部':
+                            backarr.push(this.list[i]);
+                            break;
+                        case '完成':
+                            if (this.list[i].complete == true) {
+
+                                backarr.push(this.list[i]);
+                            }
+                            break;
+                        case '未完成':
+                            if (this.list[i].complete == false) {
+
+                                backarr.push(this.list[i]);
+                            }
+                            break;
+
+                    }
+                }
+                return backarr;
+
+            }
+        }
+    })
+    window.onbeforeunload = function () {
+        window.localStorage.setItem("SZHM19list", JSON.stringify(list));
+        return confirm("确定离开此页面吗？");
+    }
+
+    // window.onunload = function (event) {
+    //     return confirm("确定离开此页面吗？");
+    // }
+</script>
